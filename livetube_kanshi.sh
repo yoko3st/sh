@@ -37,5 +37,5 @@ do
     echo  http://livetube.cc$HONBUN | mail -s ${SUBJECT} $1
   fi
   cat $TMP_FILE > $TMP_FILE.old
-done < /home/s-yokoyama/sh/livetube_kanshi.list.txt
+done < ~/sh/livetube_kanshi.list.txt
 

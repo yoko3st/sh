@@ -5,19 +5,20 @@
 # Description:
 #   livetubeの配信情報を監視して配信があれば
 #   第一引数のメールアドレスに送信する。
-#   監視対象は同フォルダのlivetube_kanshi.list.txtに記載する。
-#   livetube_kanshi.list.txtの書式は下記の通り。
+#   監視対象はリストに記載して第二引数としてシェルに引き渡す。
+#   監視対象リストの書式は下記の通り。
 #   配信者名△配信者の配信動画ページ
-#   ＃△は半角スペース
+#   例) さんだる http://livetube.cc/%E3%81%95%E3%82%93%E3%81%A0%E3%82%8B
 #
 # Lang:
 #   UTF-8
 #
 # Argument:
 #   第一引数(必須) 送信先メールアドレス
+#   第二引数(必須) 監視対象リスト
 #
 # Create 2015/05/22 yoko3st@gmail.com
-# Update
+# Update 2015/05/28 yoko3st@gmail.com 監視対象リストを第二引数にした
 #
 #################################################
 
@@ -37,5 +38,5 @@ do
     echo  http://livetube.cc$HONBUN | mail -s ${SUBJECT} $1
   fi
   cat $TMP_FILE > $TMP_FILE.old
-done < ~/sh/livetube_kanshi.list.txt
+done < $2
 

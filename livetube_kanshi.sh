@@ -19,24 +19,48 @@
 #
 # Create 2015/05/22 yoko3st@gmail.com
 # Update 2015/05/28 yoko3st@gmail.com 監視対象リストを第二引数にした
+# Update 2016/05/22 yoko3st@gmail.com コマンドチェック追加、TMPファイルの個別化、監視対象リストのコメントアウト・空行を無視、wget失敗を検知、その他軽微な修正を実施した
 #
 #################################################
 
-# 固定変数
+# シェル名設定
+SH_NAME=`basename $0 .sh`
+
+# 言語設定
 export LANG=ja_JP.utf8
 
-# 監視対象一覧読み込み
-while read LINE
+# コマンドチェック
+while read CMD_NAME
 do
-  TMP_FILE=/tmp/livetube_kanshi_`echo $LINE | awk '{print $1}'`.tmp
-  wget -q -O - `echo $LINE | awk '{print $2}'` | grep -A 8 "コメント" | tail -1 > $TMP_FILE
+  if [ ! `which ${CMD_NAME}` ]; then
+    echo "${CMD_NAME}コマンドが存在しないため、処理を異常終了します。" | mail -s "異常終了：${SH_NAME}" $1
+    exit 1
+  fi
+done << CMD_NAME_LIST
+wget
+CMD_NAME_LIST
+
+# TMPディレクトリがなければ作成
+TMP_DIR=/tmp/${SH_NAME} ; [ -d $TMP_DIR ] || mkdir $TMP_DIR
+
+# 監視対象一覧読み込んで、チェックループ開始
+grep -v -e "^#" -e "^$" $2 | while read HAI_NAME HAI_LINK
+do
+  # 配信者名から一時ファイルを指定
+  TMP_FILE=${TMP_DIR}/${HAI_NAME}.tmp
+
+  # wgetにて配信者ページを取得し、最新の配信リンクだけ抜き出す。wget失敗時はスキップする。
+  wget -q -O - ${HAI_LINK} | grep -A 8 "コメント" | tail -1 > $TMP_FILE
+  if [ ${PIPESTATUS[0]} -ne 0 ]; then
+    echo "" | mail -s "${HAI_NAME}の配信チェックに失敗" $1
+    continue
+  fi
 
   diff $TMP_FILE $TMP_FILE.old ; DIF_RCD=$?
   if [ $DIF_RCD -eq 1 ]; then
-    SUBJECT="`echo $LINE | awk '{print $1}'`の配信を確認"
+    SUBJECT="${HAI_NAME}の配信を確認"
     HONBUN=`expr "\`cat $TMP_FILE\`" : "..........\(.*\)..."`
     echo  http://livetube.cc$HONBUN | mail -s ${SUBJECT} $1
   fi
   cat $TMP_FILE > $TMP_FILE.old
-done < $2
-
+done

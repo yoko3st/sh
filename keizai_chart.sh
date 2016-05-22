@@ -16,13 +16,32 @@
 #   第二引数(任意) 任意の文字列
 #
 # Create 2015/05/22 yoko3st@gmail.com
-# Update 
+# Update 2016/05/22 yoko3st@gmail.com コマンドチェック追加、TMPファイルの個別化、その他軽微な修正
 #
 #################################################
 
-# 固定変数
+# シェル名設定
+SH_NAME=`basename $0 .sh`
+
+# 言語設定
 export LANG=ja_JP.utf8
-MAIL_BODY_FILE=/tmp/keizai_chart_mail_body-`date +%Y%m%d%H%M%S`
+
+# コマンドチェック
+while read CMD_NAME
+do
+  if [ ! `which ${CMD_NAME}` ]; then
+    echo "${CMD_NAME}コマンドが存在しないため、処理を異常終了します。" | mail -s "異常終了：${SH_NAME}" $1
+    exit 1
+  fi
+done << CMD_NAME_LIST
+wget
+CMD_NAME_LIST
+
+# TMPディレクトリがなければ作成
+TMP_DIR=/tmp/${SH_NAME} ; [ -d $TMP_DIR ] || mkdir $TMP_DIR
+
+# メールボディおよび一時ファイル名設定
+MAIL_BODY_FILE=/${TMP_DIR}/keizai_chart_mail_body-`date +%Y%m%d%H%M%S`
 
 # 今日日付
 echo `date` >> $MAIL_BODY_FILE

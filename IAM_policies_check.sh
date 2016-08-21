@@ -31,7 +31,7 @@ do
   fi
 done << CMD_NAME_LIST
 js-beautify
-jq
+/usr/local/bin/jq
 CMD_NAME_LIST
 
 # TMPディレクトリがなければ作成
@@ -48,15 +48,14 @@ egrep '": {|Actions:' $TMP_DIR/policies.tmp > $TMP_DIR/policies.txt
 grep -v "Actions:" $TMP_DIR/policies.txt | cut -d\" -f2 | while read AWS_Service
 do
   AWS_SW_NAME=`echo $AWS_Service | sed -e "s/ //g"`
-  OLD_FILE=${TMP_DIR}/${AWS_SW_NAME}.txt
   TMP_FILE=${TMP_DIR}/${AWS_SW_NAME}_`date +%Y%m%d%H%M%S`.tmp
   grep -A 1 "${AWS_Service}" $TMP_DIR/policies.txt | tail -1 | cut -d: -f2 | sed -e "s/],/]/g" | jq '.' > ${TMP_FILE}
-  if [ -e ${OLD_FILE} ]; then
-    diff -u ${OLD_FILE} ${TMP_FILE} > ${TMP_DIR}/${AWS_SW_NAME}_MAILHONBUN.txt ; DIFF_RCD=$?
+  if [ -e ${TMP_DIR}/${AWS_SW_NAME}.txt ]; then
+    diff -u ${TMP_DIR}/${AWS_SW_NAME}.txt ${TMP_FILE} > ${TMP_DIR}/${AWS_SW_NAME}_MAILHONBUN.txt ; DIFF_RCD=$?
     if [ $DIFF_RCD -ne 0 ]; then
       SUBJECT="${AWS_SW_NAME}のポリシー更新を確認"
       cat ${TMP_DIR}/${AWS_SW_NAME}_MAILHONBUN.txt | mail -s ${SUBJECT} $1
     fi
   fi
-  cat ${TMP_FILE} > ${OLD_FILE}
+  cat ${TMP_FILE} > ${TMP_DIR}/${AWS_SW_NAME}.txt
 done

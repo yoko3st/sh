@@ -38,6 +38,7 @@ do
   fi
 done << CMD_NAME_LIST
 wget
+nkf
 CMD_NAME_LIST
 
 # TMPディレクトリがなければ作成
@@ -60,7 +61,7 @@ do
   if [ $DIF_RCD -eq 1 ]; then
     SUBJECT="${HAI_NAME}の配信を確認"
     HONBUN=`expr "\`cat $TMP_FILE\`" : "..........\(.*\)..."`
-    echo  http://livetube.cc$HONBUN | mail -s ${SUBJECT} $1
+    echo  http://livetube.cc$HONBUN | nkf -w --url-input | mail -s ${SUBJECT} $1
   fi
   cat $TMP_FILE > $TMP_FILE.old
 done

@@ -21,6 +21,7 @@
 # Update 2015/05/28 yoko3st@gmail.com 監視対象リストを第二引数にした
 # Update 2016/05/22 yoko3st@gmail.com コマンドチェック追加、TMPファイルの個別化、監視対象リストのコメントアウト・空行を無視、wget失敗を検知、その他軽微な修正を実施した
 # Update 2016/09/04 yoko3st@gmail.com 日本語URLをメール転送時にデコードするように修正。併せてnkfコマンド有無チェックも追加
+# Update 2016/09/10 yoko3st@gmail.com livetubeでは配信URLに全角スペースも含めるが、日本語にURLをデコードすると当然全角スペースになる。それをメール本文で送信してもメーラーでURLの続きとは認識されない。なので、メール本文はデコード前にして件名にデコード済みのURLをつけることで配信タイトルを分かり易くした。ついでにwgetコマンドをやめて、最小限インストールでも入るcurlコマンドに変えた。
 #
 #################################################
 
@@ -38,7 +39,6 @@ do
     exit 1
   fi
 done << CMD_NAME_LIST
-wget
 nkf
 CMD_NAME_LIST
 
@@ -51,8 +51,8 @@ do
   # 配信者名から一時ファイルを指定
   TMP_FILE=${TMP_DIR}/${HAI_NAME}.tmp
 
-  # wgetにて配信者ページを取得し、最新の配信リンクだけ抜き出す。wget失敗時はスキップする。
-  wget -q -O - ${HAI_LINK} | grep -A 8 "コメント" | tail -1 > $TMP_FILE
+  # curlにて配信者ページを取得し、最新の配信リンクだけ抜き出す。curl失敗時はスキップする。
+  curl -k -s ${HAI_LINK} | grep -A 8 "コメント" | tail -1 > $TMP_FILE
   if [ ${PIPESTATUS[0]} -ne 0 ]; then
     echo "" | mail -s "${HAI_NAME}の配信チェックに失敗" $1
     continue
@@ -60,9 +60,9 @@ do
 
   diff $TMP_FILE $TMP_FILE.old ; DIF_RCD=$?
   if [ $DIF_RCD -eq 1 ]; then
-    SUBJECT="${HAI_NAME}の配信を確認"
     HONBUN=`expr "\`cat $TMP_FILE\`" : "..........\(.*\)..."`
-    echo  http://livetube.cc$HONBUN | nkf -w --url-input | mail -s ${SUBJECT} $1
+    SUBJECT="${HAI_NAME}が`echo $HONBUN | nkf -w --url-input`を配信"
+    echo  http://livetube.cc$HONBUN | mail -s ${SUBJECT} $1
   fi
   cat $TMP_FILE > $TMP_FILE.old
 done

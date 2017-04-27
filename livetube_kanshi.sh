@@ -61,7 +61,7 @@ do
   diff $TMP_FILE $TMP_FILE.old ; DIF_RCD=$?
   if [ $DIF_RCD -eq 1 ]; then
     HONBUN=`expr "\`cat $TMP_FILE\`" : "..........\(.*\)..."`
-    SUBJECT="${HAI_NAME}が`echo $HONBUN | nkf -w --url-input`を配信"
+    SUBJECT="${HAI_NAME}が`echo $HONBUN | cut -d/ -f 3 | nkf -w --url-input`を配信"
     echo  http://livetube.cc$HONBUN | mail -s ${SUBJECT} $1
   fi
   cat $TMP_FILE > $TMP_FILE.old

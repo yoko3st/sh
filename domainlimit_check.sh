@@ -66,7 +66,7 @@ do
 
   # ドメインのTLDを判定し、それぞれのwhois情報を取得する。また、有効期限の記載方法もまちまちなので、整形する。
   case ${DOMAIN_NAME##*.} in
-    "com" ) whois ${DOMAIN_NAME} > ${TMP_FILE} || echo "${DOMAIN_NAME}のwhoisに失敗しました。" | mail -s "警告：${SH_NAME}" $1
+    "com" ) whois -h whois.verisign-grs.com ${DOMAIN_NAME} > ${TMP_FILE} || echo "${DOMAIN_NAME}のwhoisに失敗しました。" | mail -s "警告：${SH_NAME}" $1
             EXPIRATION_DATE=`grep "Expiration Date:" ${TMP_FILE} | awk -F'[ T]' '{print $5}'` ;;
     "jp"  ) whois ${DOMAIN_NAME} > ${TMP_FILE} || echo "${DOMAIN_NAME}のwhoisに失敗しました。" | mail -s "警告：${SH_NAME}" $1
             EXPIRATION_DATE=`grep 'Connected (' ${TMP_FILE} | awk -F'[()]' '{print $2}'` ;;
